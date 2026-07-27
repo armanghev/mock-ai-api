@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mock-ai-api"
-version = "0.1.0"
+version = "0.1.1"
 description = "A local mock API for testing OpenAI- and Anthropic-compatible clients."
 readme = "README.md"
 requires-python = ">=3.11"
