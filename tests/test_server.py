@@ -34,11 +34,11 @@ def test_reload_uses_top_level_uvicorn_processes_and_interrupt_terminates_them(
     FakeProcess.instances = []
     monkeypatch.setattr(server.subprocess, "Popen", FakeProcess)
     monkeypatch.setattr(sys, "argv", ["mock-ai-api", "--reload"])
-    terminated_groups: list[int] = []
+    terminated_groups: list[tuple[int, int]] = []
     monkeypatch.setattr(
         server.os,
         "killpg",
-        lambda pid, _signal: terminated_groups.append(pid),
+        lambda pid, sent_signal: terminated_groups.append((pid, sent_signal)),
     )
 
     server.main()
@@ -53,4 +53,7 @@ def test_reload_uses_top_level_uvicorn_processes_and_interrupt_terminates_them(
         process.kwargs == {"start_new_session": True}
         for process in FakeProcess.instances
     )
-    assert terminated_groups == [100, 101]
+    assert terminated_groups == [
+        (100, server.signal.SIGKILL),
+        (101, server.signal.SIGKILL),
+    ]

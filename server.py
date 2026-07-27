@@ -34,9 +34,9 @@ def stop_process(process: subprocess.Popen[object]) -> None:
         return
     try:
         if os.name == "posix":
-            os.killpg(process.pid, signal.SIGTERM)
+            os.killpg(process.pid, signal.SIGKILL)
         else:
-            process.terminate()
+            process.kill()
     except ProcessLookupError:
         pass
 
@@ -69,10 +69,14 @@ def main() -> None:
     except KeyboardInterrupt:
         print("\nStopping mock API servers...")
     finally:
-        for process in processes:
-            stop_process(process)
-        for process in processes:
-            process.wait()
+        previous_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        try:
+            for process in processes:
+                stop_process(process)
+            for process in processes:
+                process.wait()
+        finally:
+            signal.signal(signal.SIGINT, previous_sigint_handler)
 
 
 if __name__ == "__main__":
