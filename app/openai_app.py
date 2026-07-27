@@ -1,11 +1,21 @@
 from __future__ import annotations
 
+from json import JSONDecodeError
+
+from pydantic import ValidationError
 from starlette.applications import Starlette
+from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response, StreamingResponse
 from starlette.routing import Route
 
 from app.common import extract_input_text
+from app.errors import (
+    InvalidRequestBody,
+    openai_http_error,
+    openai_validation_error,
+    require_json_object,
+)
 from app.openai import builders, catalog
 from app.scenarios import parse_scenario
 from app.schemas import OpenAIChatCompletionRequest, OpenAILegacyCompletionRequest
@@ -76,7 +86,7 @@ async def create_legacy_completion(request: Request) -> Response:
 
 
 async def create_embeddings(request: Request) -> Response:
-    payload = await request.json()
+    payload = await require_json_object(request)
     return JSONResponse(
         builders.build_embeddings(
             payload.get("model", "text-embedding-3-small"), payload.get("input", "")
@@ -85,7 +95,7 @@ async def create_embeddings(request: Request) -> Response:
 
 
 async def create_moderations(request: Request) -> Response:
-    payload = await request.json()
+    payload = await require_json_object(request)
     return JSONResponse(
         builders.build_moderation(
             payload.get("model", "omni-moderation-latest"),
@@ -95,7 +105,7 @@ async def create_moderations(request: Request) -> Response:
 
 
 async def create_image_generation(request: Request) -> Response:
-    payload = await request.json()
+    payload = await require_json_object(request)
     return JSONResponse(
         builders.build_image_generation(
             payload.get("model", "gpt-image-1"), str(payload.get("prompt", ""))
@@ -126,7 +136,7 @@ async def create_audio_translation(request: Request) -> Response:
 
 
 async def create_response(request: Request) -> Response:
-    payload = await request.json()
+    payload = await require_json_object(request)
     scenario = parse_scenario(str(payload.get("model", "gpt-4.1")))
     error_response = catalog.maybe_raise_error(scenario)
     if error_response is not None:
@@ -212,6 +222,12 @@ async def cancel_response(request: Request) -> Response:
 def create_app() -> Starlette:
     return Starlette(
         debug=True,
+        exception_handlers={
+            JSONDecodeError: openai_validation_error,
+            InvalidRequestBody: openai_validation_error,
+            ValidationError: openai_validation_error,
+            HTTPException: openai_http_error,
+        },
         routes=[
             Route("/health", health, methods=["GET"]),
             Route("/v1/models", list_models, methods=["GET"]),

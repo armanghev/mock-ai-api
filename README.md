@@ -96,6 +96,10 @@ python3 -m pytest -q
 ```
 
 The test clients instantiate each application directly, so the servers do not need to be running when tests execute.
+The SDK compatibility suite starts isolated local Uvicorn processes and is tested with
+`openai==2.16.0` and `anthropic==0.76.0`.
+Its process-level fixture relies on POSIX file-descriptor inheritance, so those integration
+tests are skipped on non-POSIX platforms.
 
 ## Project layout
 

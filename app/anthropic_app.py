@@ -1,11 +1,21 @@
 from __future__ import annotations
 
+from json import JSONDecodeError
+
+from pydantic import ValidationError
 from starlette.applications import Starlette
+from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response, StreamingResponse
 from starlette.routing import Route
 
 from app.anthropic import builders, catalog
+from app.errors import (
+    InvalidRequestBody,
+    anthropic_http_error,
+    anthropic_validation_error,
+    require_json_object,
+)
 from app.scenarios import parse_scenario
 from app.schemas import AnthropicMessageRequest
 
@@ -55,7 +65,7 @@ async def create_message(request: Request) -> Response:
 
 
 async def count_message_tokens(request: Request) -> Response:
-    payload = await request.json()
+    payload = await require_json_object(request)
     messages = payload.get("messages", [])
     if not isinstance(messages, list):
         messages = []
@@ -63,7 +73,7 @@ async def count_message_tokens(request: Request) -> Response:
 
 
 async def create_batch(request: Request) -> Response:
-    payload = await request.json()
+    payload = await require_json_object(request)
     requests = payload.get("requests", [])
     if not isinstance(requests, list):
         requests = []
@@ -218,6 +228,12 @@ async def delete_file(request: Request) -> Response:
 def create_app() -> Starlette:
     return Starlette(
         debug=True,
+        exception_handlers={
+            JSONDecodeError: anthropic_validation_error,
+            InvalidRequestBody: anthropic_validation_error,
+            ValidationError: anthropic_validation_error,
+            HTTPException: anthropic_http_error,
+        },
         routes=[
             Route("/health", health, methods=["GET"]),
             Route("/v1/models", list_models, methods=["GET"]),
