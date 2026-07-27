@@ -11,7 +11,6 @@ from app.common import (
     extract_prompt_text,
     generate_id,
     stream_with_delay,
-    unix_timestamp,
 )
 from app.scenarios import Scenario
 
@@ -60,14 +59,19 @@ def count_tokens(messages: list[dict[str, Any]]) -> dict[str, Any]:
     return {"input_tokens": estimate_tokens(prompt_text)}
 
 
-async def stream_message(scenario: Scenario, messages: list[dict[str, Any]]) -> AsyncIterator[str]:
+async def stream_message(
+    scenario: Scenario, messages: list[dict[str, Any]]
+) -> AsyncIterator[str]:
     prompt_text = extract_prompt_text(messages)
     input_tokens = estimate_tokens(prompt_text)
 
     if scenario.name == "mock-stream-error":
         yield anthropic_sse(
             "error",
-            {"type": "error", "error": {"type": "api_error", "message": "Mock streaming failure"}},
+            {
+                "type": "error",
+                "error": {"type": "api_error", "message": "Mock streaming failure"},
+            },
         )
         return
 
@@ -79,7 +83,9 @@ async def stream_message(scenario: Scenario, messages: list[dict[str, Any]]) -> 
             yield event
         return
 
-    response_text = _assistant_text(scenario, prompt_text, prefix="Mock Anthropic stream for: ")
+    response_text = _assistant_text(
+        scenario, prompt_text, prefix="Mock Anthropic stream for: "
+    )
     output_tokens = estimate_tokens(response_text)
     message_id = generate_id("msg_")
     events = _text_stream_events(
@@ -93,7 +99,12 @@ async def stream_message(scenario: Scenario, messages: list[dict[str, Any]]) -> 
         yield event
 
 
-def _assistant_text(scenario: Scenario, prompt_text: str, *, prefix: str = "Mock Anthropic response for: ") -> str:
+def _assistant_text(
+    scenario: Scenario,
+    prompt_text: str,
+    *,
+    prefix: str = "Mock Anthropic response for: ",
+) -> str:
     if scenario.name in {"mock-text", "mock-anthropic-stream"}:
         return "Hello. It's nice to meet you."
     return f"{prefix}{prompt_text or 'empty prompt'}"
@@ -148,7 +159,9 @@ def _text_stream_events(
                 },
             )
         )
-    events.append(anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0}))
+    events.append(
+        anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
+    )
     events.append(
         anthropic_sse(
             "message_delta",
@@ -194,7 +207,12 @@ def _tool_stream_events(scenario: Scenario, input_tokens: int) -> list[str]:
             {
                 "type": "content_block_start",
                 "index": 0,
-                "content_block": {"type": "tool_use", "id": tool_id, "name": "Write", "input": {}},
+                "content_block": {
+                    "type": "tool_use",
+                    "id": tool_id,
+                    "name": "Write",
+                    "input": {},
+                },
             },
         )
     )
@@ -209,7 +227,9 @@ def _tool_stream_events(scenario: Scenario, input_tokens: int) -> list[str]:
                 },
             )
         )
-    events.append(anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0}))
+    events.append(
+        anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
+    )
     events.append(
         anthropic_sse(
             "message_delta",

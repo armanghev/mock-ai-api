@@ -1,5 +1,6 @@
-fastapi>=0.115.0
-httpx2>=0.22.0
-pytest>=8.3.0
-python-multipart>=0.0.20
+# Runtime dependencies for environments that do not install the package.
+# Prefer: python3 -m pip install -e ".[dev]"
+fastapi==0.115.14
+httpx>=0.22.0
+python-multipart==0.0.32
 uvicorn>=0.32.0

@@ -26,7 +26,12 @@ async def retrieve_model(request: Request) -> Response:
     if model is None:
         return JSONResponse(
             status_code=404,
-            content={"error": {"message": f"Model '{request.path_params['model']}' not found", "type": "invalid_request_error"}},
+            content={
+                "error": {
+                    "message": f"Model '{request.path_params['model']}' not found",
+                    "type": "invalid_request_error",
+                }
+            },
         )
     return JSONResponse(model)
 
@@ -36,7 +41,9 @@ async def create_chat_completion(request: Request) -> Response:
     scenario = parse_scenario(payload.model)
     error_response = catalog.maybe_raise_error(scenario)
     if error_response is not None:
-        return JSONResponse(status_code=error_response["status_code"], content=error_response["body"])
+        return JSONResponse(
+            status_code=error_response["status_code"], content=error_response["body"]
+        )
 
     if payload.stream:
         return StreamingResponse(
@@ -52,9 +59,13 @@ async def create_legacy_completion(request: Request) -> Response:
     scenario = parse_scenario(payload.model)
     error_response = catalog.maybe_raise_error(scenario)
     if error_response is not None:
-        return JSONResponse(status_code=error_response["status_code"], content=error_response["body"])
+        return JSONResponse(
+            status_code=error_response["status_code"], content=error_response["body"]
+        )
 
-    prompt = payload.prompt if isinstance(payload.prompt, str) else "\n".join(payload.prompt)
+    prompt = (
+        payload.prompt if isinstance(payload.prompt, str) else "\n".join(payload.prompt)
+    )
     if payload.stream:
         return StreamingResponse(
             builders.stream_legacy_completion(scenario, prompt),
@@ -66,20 +77,29 @@ async def create_legacy_completion(request: Request) -> Response:
 
 async def create_embeddings(request: Request) -> Response:
     payload = await request.json()
-    return JSONResponse(builders.build_embeddings(payload.get("model", "text-embedding-3-small"), payload.get("input", "")))
+    return JSONResponse(
+        builders.build_embeddings(
+            payload.get("model", "text-embedding-3-small"), payload.get("input", "")
+        )
+    )
 
 
 async def create_moderations(request: Request) -> Response:
     payload = await request.json()
     return JSONResponse(
-        builders.build_moderation(payload.get("model", "omni-moderation-latest"), str(payload.get("input", "")))
+        builders.build_moderation(
+            payload.get("model", "omni-moderation-latest"),
+            str(payload.get("input", "")),
+        )
     )
 
 
 async def create_image_generation(request: Request) -> Response:
     payload = await request.json()
     return JSONResponse(
-        builders.build_image_generation(payload.get("model", "gpt-image-1"), str(payload.get("prompt", "")))
+        builders.build_image_generation(
+            payload.get("model", "gpt-image-1"), str(payload.get("prompt", ""))
+        )
     )
 
 
@@ -91,7 +111,12 @@ async def create_audio_transcription(request: Request) -> Response:
     return JSONResponse(
         {
             "text": "Hello, thanks for calling support.",
-            "usage": {"type": "tokens", "input_tokens": 124, "output_tokens": 12, "total_tokens": 136},
+            "usage": {
+                "type": "tokens",
+                "input_tokens": 124,
+                "output_tokens": 12,
+                "total_tokens": 136,
+            },
         }
     )
 
@@ -105,7 +130,9 @@ async def create_response(request: Request) -> Response:
     scenario = parse_scenario(str(payload.get("model", "gpt-4.1")))
     error_response = catalog.maybe_raise_error(scenario)
     if error_response is not None:
-        return JSONResponse(status_code=error_response["status_code"], content=error_response["body"])
+        return JSONResponse(
+            status_code=error_response["status_code"], content=error_response["body"]
+        )
 
     input_value = payload.get("input", "")
     prompt_text = extract_input_text(input_value)
@@ -124,7 +151,9 @@ async def create_response(request: Request) -> Response:
         output_text=output_text,
         scenario=scenario,
     )
-    public_record = {key: value for key, value in record.items() if not key.startswith("_")}
+    public_record = {
+        key: value for key, value in record.items() if not key.startswith("_")
+    }
     catalog.response_store.save(record)
     return JSONResponse(public_record)
 
@@ -134,9 +163,16 @@ async def retrieve_response(request: Request) -> Response:
     if response is None:
         return JSONResponse(
             status_code=404,
-            content={"error": {"message": "Response not found", "type": "invalid_request_error"}},
+            content={
+                "error": {
+                    "message": "Response not found",
+                    "type": "invalid_request_error",
+                }
+            },
         )
-    public_record = {key: value for key, value in response.items() if not key.startswith("_")}
+    public_record = {
+        key: value for key, value in response.items() if not key.startswith("_")
+    }
     return JSONResponse(public_record)
 
 
@@ -145,7 +181,12 @@ async def list_response_input_items(request: Request) -> Response:
     if response is None:
         return JSONResponse(
             status_code=404,
-            content={"error": {"message": "Response not found", "type": "invalid_request_error"}},
+            content={
+                "error": {
+                    "message": "Response not found",
+                    "type": "invalid_request_error",
+                }
+            },
         )
     return JSONResponse(catalog.build_input_items(response))
 
@@ -155,9 +196,16 @@ async def cancel_response(request: Request) -> Response:
     if response is None:
         return JSONResponse(
             status_code=404,
-            content={"error": {"message": "Response not found", "type": "invalid_request_error"}},
+            content={
+                "error": {
+                    "message": "Response not found",
+                    "type": "invalid_request_error",
+                }
+            },
         )
-    public_record = {key: value for key, value in response.items() if not key.startswith("_")}
+    public_record = {
+        key: value for key, value in response.items() if not key.startswith("_")
+    }
     return JSONResponse(public_record)
 
 
@@ -174,12 +222,20 @@ def create_app() -> Starlette:
             Route("/v1/moderations", create_moderations, methods=["POST"]),
             Route("/v1/images/generations", create_image_generation, methods=["POST"]),
             Route("/v1/audio/speech", create_audio_speech, methods=["POST"]),
-            Route("/v1/audio/transcriptions", create_audio_transcription, methods=["POST"]),
+            Route(
+                "/v1/audio/transcriptions", create_audio_transcription, methods=["POST"]
+            ),
             Route("/v1/audio/translations", create_audio_translation, methods=["POST"]),
             Route("/v1/responses", create_response, methods=["POST"]),
             Route("/v1/responses/{response_id}", retrieve_response, methods=["GET"]),
-            Route("/v1/responses/{response_id}/input_items", list_response_input_items, methods=["GET"]),
-            Route("/v1/responses/{response_id}/cancel", cancel_response, methods=["POST"]),
+            Route(
+                "/v1/responses/{response_id}/input_items",
+                list_response_input_items,
+                methods=["GET"],
+            ),
+            Route(
+                "/v1/responses/{response_id}/cancel", cancel_response, methods=["POST"]
+            ),
         ],
     )
 

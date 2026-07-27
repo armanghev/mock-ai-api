@@ -2,25 +2,85 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.common import generate_id, iso_timestamp, unix_timestamp
+from app.common import generate_id, unix_timestamp
 from app.scenarios import Scenario, error_type_for_status
 
 OPENAI_MODELS: list[dict[str, Any]] = [
     {"id": "gpt-4.1", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-4o-mini", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-3.5-turbo-instruct", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "text-embedding-3-small", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "omni-moderation-latest", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-image-1", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-4o-mini-tts", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-4o-transcribe", "object": "model", "created": 1686935002, "owned_by": "openai"},
+    {
+        "id": "gpt-4o-mini",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "gpt-3.5-turbo-instruct",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "text-embedding-3-small",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "omni-moderation-latest",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "gpt-image-1",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "gpt-4o-mini-tts",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "gpt-4o-transcribe",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
     {"id": "whisper-1", "object": "model", "created": 1686935002, "owned_by": "openai"},
     # Scenario models for testing
-    {"id": "gpt-4.1:mock-text", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-4.1:mock-tool-stream", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-4.1:mock-bad-tool-json", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-4.1:mock-429", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    {"id": "gpt-4.1:mock-delay", "object": "model", "created": 1686935002, "owned_by": "openai"},
+    {
+        "id": "gpt-4.1:mock-text",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "gpt-4.1:mock-tool-stream",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "gpt-4.1:mock-bad-tool-json",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "gpt-4.1:mock-429",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
+    {
+        "id": "gpt-4.1:mock-delay",
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    },
 ]
 
 
@@ -134,7 +194,9 @@ def build_input_items(response: dict[str, Any]) -> dict[str, Any]:
                     normalized = content
                 else:
                     normalized = [{"type": "input_text", "text": str(content)}]
-                items.append({"type": "message", "role": item["role"], "content": normalized})
+                items.append(
+                    {"type": "message", "role": item["role"], "content": normalized}
+                )
     elif isinstance(input_value, str) and input_value:
         items.append(
             {

@@ -27,7 +27,10 @@ async def retrieve_model(request: Request) -> Response:
             status_code=404,
             content={
                 "type": "error",
-                "error": {"type": "not_found_error", "message": f"Model '{request.path_params['model_id']}' not found"},
+                "error": {
+                    "type": "not_found_error",
+                    "message": f"Model '{request.path_params['model_id']}' not found",
+                },
             },
         )
     return JSONResponse(model)
@@ -38,7 +41,9 @@ async def create_message(request: Request) -> Response:
     scenario = parse_scenario(payload.model)
     error_response = catalog.maybe_raise_error(scenario)
     if error_response is not None:
-        return JSONResponse(status_code=error_response["status_code"], content=error_response["body"])
+        return JSONResponse(
+            status_code=error_response["status_code"], content=error_response["body"]
+        )
 
     if payload.stream:
         return StreamingResponse(
@@ -83,7 +88,10 @@ async def retrieve_batch(request: Request) -> Response:
     if batch is None:
         return JSONResponse(
             status_code=404,
-            content={"type": "error", "error": {"type": "not_found_error", "message": "Batch not found"}},
+            content={
+                "type": "error",
+                "error": {"type": "not_found_error", "message": "Batch not found"},
+            },
         )
     return JSONResponse(catalog.public_record(batch))
 
@@ -93,7 +101,10 @@ async def cancel_batch(request: Request) -> Response:
     if batch is None:
         return JSONResponse(
             status_code=404,
-            content={"type": "error", "error": {"type": "not_found_error", "message": "Batch not found"}},
+            content={
+                "type": "error",
+                "error": {"type": "not_found_error", "message": "Batch not found"},
+            },
         )
     return JSONResponse(catalog.public_record(batch))
 
@@ -103,7 +114,10 @@ async def delete_batch(request: Request) -> Response:
     if not deleted:
         return JSONResponse(
             status_code=404,
-            content={"type": "error", "error": {"type": "not_found_error", "message": "Batch not found"}},
+            content={
+                "type": "error",
+                "error": {"type": "not_found_error", "message": "Batch not found"},
+            },
         )
     return Response(status_code=204)
 
@@ -113,7 +127,10 @@ async def batch_results(request: Request) -> Response:
     if lines is None:
         return JSONResponse(
             status_code=404,
-            content={"type": "error", "error": {"type": "not_found_error", "message": "Batch not found"}},
+            content={
+                "type": "error",
+                "error": {"type": "not_found_error", "message": "Batch not found"},
+            },
         )
 
     async def jsonl_stream():
@@ -132,8 +149,16 @@ async def batch_results(request: Request) -> Response:
 async def upload_file(request: Request) -> Response:
     form = await request.form()
     uploaded = form.get("file")
-    filename = getattr(uploaded, "filename", "document.pdf") if uploaded is not None else "document.pdf"
-    content_type = getattr(uploaded, "content_type", "application/pdf") if uploaded is not None else "application/pdf"
+    filename = (
+        getattr(uploaded, "filename", "document.pdf")
+        if uploaded is not None
+        else "document.pdf"
+    )
+    content_type = (
+        getattr(uploaded, "content_type", "application/pdf")
+        if uploaded is not None
+        else "application/pdf"
+    )
     raw = await uploaded.read() if uploaded is not None else b"%PDF-1.4 mock"
     record = catalog.file_store.create(filename, content_type, len(raw), raw)
     return JSONResponse(catalog.public_record(record))
@@ -156,7 +181,10 @@ async def retrieve_file(request: Request) -> Response:
     if record is None:
         return JSONResponse(
             status_code=404,
-            content={"type": "error", "error": {"type": "not_found_error", "message": "File not found"}},
+            content={
+                "type": "error",
+                "error": {"type": "not_found_error", "message": "File not found"},
+            },
         )
     return JSONResponse(catalog.public_record(record))
 
@@ -166,7 +194,10 @@ async def download_file(request: Request) -> Response:
     if record is None:
         return JSONResponse(
             status_code=404,
-            content={"type": "error", "error": {"type": "not_found_error", "message": "File not found"}},
+            content={
+                "type": "error",
+                "error": {"type": "not_found_error", "message": "File not found"},
+            },
         )
     return Response(content=record["_content"], media_type=record["mime_type"])
 
@@ -176,7 +207,10 @@ async def delete_file(request: Request) -> Response:
     if deleted is None:
         return JSONResponse(
             status_code=404,
-            content={"type": "error", "error": {"type": "not_found_error", "message": "File not found"}},
+            content={
+                "type": "error",
+                "error": {"type": "not_found_error", "message": "File not found"},
+            },
         )
     return JSONResponse(deleted)
 
@@ -192,10 +226,26 @@ def create_app() -> Starlette:
             Route("/v1/messages/count_tokens", count_message_tokens, methods=["POST"]),
             Route("/v1/messages/batches", create_batch, methods=["POST"]),
             Route("/v1/messages/batches", list_batches, methods=["GET"]),
-            Route("/v1/messages/batches/{message_batch_id}", retrieve_batch, methods=["GET"]),
-            Route("/v1/messages/batches/{message_batch_id}/cancel", cancel_batch, methods=["POST"]),
-            Route("/v1/messages/batches/{message_batch_id}", delete_batch, methods=["DELETE"]),
-            Route("/v1/messages/batches/{message_batch_id}/results", batch_results, methods=["GET"]),
+            Route(
+                "/v1/messages/batches/{message_batch_id}",
+                retrieve_batch,
+                methods=["GET"],
+            ),
+            Route(
+                "/v1/messages/batches/{message_batch_id}/cancel",
+                cancel_batch,
+                methods=["POST"],
+            ),
+            Route(
+                "/v1/messages/batches/{message_batch_id}",
+                delete_batch,
+                methods=["DELETE"],
+            ),
+            Route(
+                "/v1/messages/batches/{message_batch_id}/results",
+                batch_results,
+                methods=["GET"],
+            ),
             Route("/v1/files", upload_file, methods=["POST"]),
             Route("/v1/files", list_files, methods=["GET"]),
             Route("/v1/files/{file_id}", retrieve_file, methods=["GET"]),

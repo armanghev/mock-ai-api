@@ -37,7 +37,9 @@ def extract_prompt_text(messages: list[dict[str, Any]]) -> str:
                 if isinstance(item, dict):
                     if isinstance(item.get("text"), str):
                         text_parts.append(item["text"])
-                    elif item.get("type") == "input_text" and isinstance(item.get("text"), str):
+                    elif item.get("type") == "input_text" and isinstance(
+                        item.get("text"), str
+                    ):
                         text_parts.append(item["text"])
     return "\n".join(part for part in text_parts if part)
 
@@ -53,7 +55,9 @@ def extract_input_text(value: Any) -> str:
             elif isinstance(item, dict):
                 if isinstance(item.get("text"), str):
                     parts.append(item["text"])
-                elif item.get("type") in {"input_text", "output_text"} and isinstance(item.get("text"), str):
+                elif item.get("type") in {"input_text", "output_text"} and isinstance(
+                    item.get("text"), str
+                ):
                     parts.append(item["text"])
                 elif item.get("role") and item.get("content"):
                     parts.append(extract_input_text(item["content"]))

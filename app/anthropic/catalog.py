@@ -181,7 +181,9 @@ class FileStore:
     def __init__(self) -> None:
         self._files: dict[str, dict[str, Any]] = {}
 
-    def create(self, filename: str, mime_type: str, size_bytes: int, content: bytes) -> dict[str, Any]:
+    def create(
+        self, filename: str, mime_type: str, size_bytes: int, content: bytes
+    ) -> dict[str, Any]:
         file_id = generate_id("file_")
         record = {
             "id": file_id,

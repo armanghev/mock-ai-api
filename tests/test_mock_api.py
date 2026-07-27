@@ -36,7 +36,9 @@ def test_openai_chat_completion_returns_text_response(openai_client) -> None:
     assert body["usage"]["completion_tokens"] > 0
 
 
-def test_openai_chat_completion_returns_tool_call_with_bad_json_when_requested(openai_client) -> None:
+def test_openai_chat_completion_returns_tool_call_with_bad_json_when_requested(
+    openai_client,
+) -> None:
     response = openai_client.post(
         "/v1/chat/completions",
         json={
@@ -52,7 +54,9 @@ def test_openai_chat_completion_returns_tool_call_with_bad_json_when_requested(o
     assert response.json()["choices"][0]["finish_reason"] == "tool_calls"
 
 
-def test_openai_chat_completion_streams_text_and_finishes_with_usage_chunk(openai_client) -> None:
+def test_openai_chat_completion_streams_text_and_finishes_with_usage_chunk(
+    openai_client,
+) -> None:
     started = time.perf_counter()
     with openai_client.stream(
         "POST",
@@ -73,7 +77,11 @@ def test_openai_chat_completion_streams_text_and_finishes_with_usage_chunk(opena
     payloads = [json.loads(line.removeprefix("data: ")) for line in data_lines[:-1]]
     assert payloads[0]["object"] == "chat.completion.chunk"
     assert payloads[0]["choices"][0]["delta"]["role"] == "assistant"
-    assert any(payload["choices"][0]["delta"].get("content") for payload in payloads if payload["choices"])
+    assert any(
+        payload["choices"][0]["delta"].get("content")
+        for payload in payloads
+        if payload["choices"]
+    )
     assert payloads[-1]["choices"][0]["finish_reason"] == "stop"
     assert payloads[-1]["usage"]["prompt_tokens"] > 0
     assert elapsed >= 0.08
@@ -99,7 +107,12 @@ def test_openai_chat_completion_streams_tool_call_deltas(openai_client) -> None:
         if payload["choices"] and payload["choices"][0]["delta"].get("tool_calls")
     ]
     assert tool_delta_payloads
-    assert tool_delta_payloads[0]["choices"][0]["delta"]["tool_calls"][0]["function"]["name"] == "Write"
+    assert (
+        tool_delta_payloads[0]["choices"][0]["delta"]["tool_calls"][0]["function"][
+            "name"
+        ]
+        == "Write"
+    )
     assert payloads[-1]["choices"][0]["finish_reason"] == "tool_calls"
 
 
@@ -120,7 +133,10 @@ def test_openai_chat_completion_can_return_rate_limit_error(openai_client) -> No
 def test_openai_legacy_completion(openai_client) -> None:
     response = openai_client.post(
         "/v1/completions",
-        json={"model": "gpt-3.5-turbo-instruct", "prompt": "Write a tagline for an ice cream shop."},
+        json={
+            "model": "gpt-3.5-turbo-instruct",
+            "prompt": "Write a tagline for an ice cream shop.",
+        },
     )
 
     assert response.status_code == 200
@@ -143,7 +159,10 @@ def test_openai_models_list_and_retrieve(openai_client) -> None:
 def test_openai_moderations(openai_client) -> None:
     response = openai_client.post(
         "/v1/moderations",
-        json={"model": "omni-moderation-latest", "input": "I would like to hurt someone."},
+        json={
+            "model": "omni-moderation-latest",
+            "input": "I would like to hurt someone.",
+        },
     )
     assert response.status_code == 200
     assert response.json()["results"][0]["flagged"] is True
@@ -212,7 +231,9 @@ def test_anthropic_tool_stream_emits_input_json_deltas(anthropic_client) -> None
     for index, line in enumerate(lines):
         if line == "event: content_block_delta" and index + 1 < len(lines):
             delta_payloads.append(json.loads(lines[index + 1].removeprefix("data: ")))
-    assert any(payload["delta"]["type"] == "input_json_delta" for payload in delta_payloads)
+    assert any(
+        payload["delta"]["type"] == "input_json_delta" for payload in delta_payloads
+    )
 
 
 def test_anthropic_stream_can_emit_error_event(anthropic_client) -> None:
@@ -256,7 +277,12 @@ def test_openai_responses_create_and_retrieve(openai_client) -> None:
             "input": [
                 {
                     "role": "user",
-                    "content": [{"type": "input_text", "text": "Write a one-line summary of ModelPort."}],
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": "Write a one-line summary of ModelPort.",
+                        }
+                    ],
                 }
             ],
         },
@@ -304,7 +330,9 @@ def test_anthropic_models_and_batch_flow(anthropic_client) -> None:
                     "params": {
                         "model": "claude-sonnet-4-20250514",
                         "max_tokens": 128,
-                        "messages": [{"role": "user", "content": "Summarize this in five words."}],
+                        "messages": [
+                            {"role": "user", "content": "Summarize this in five words."}
+                        ],
                     },
                 }
             ]

@@ -30,7 +30,9 @@ def run_anthropic_server(port: int, reload: bool) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run OpenAI and Anthropic mock API servers")
+    parser = argparse.ArgumentParser(
+        description="Run OpenAI and Anthropic mock API servers"
+    )
     parser.add_argument("--openai-port", type=int, default=OPENAI_PORT)
     parser.add_argument("--anthropic-port", type=int, default=ANTHROPIC_PORT)
     parser.add_argument("--reload", action="store_true")

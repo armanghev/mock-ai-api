@@ -16,7 +16,9 @@ from app.common import (
 from app.scenarios import Scenario
 
 
-def build_chat_completion(scenario: Scenario, messages: list[dict[str, Any]]) -> dict[str, Any]:
+def build_chat_completion(
+    scenario: Scenario, messages: list[dict[str, Any]]
+) -> dict[str, Any]:
     prompt_text = extract_prompt_text(messages)
     prompt_tokens = estimate_tokens(prompt_text)
     completion_id = generate_id("chatcmpl_")
@@ -105,14 +107,18 @@ def build_legacy_completion(scenario: Scenario, prompt: str) -> dict[str, Any]:
 
 
 def build_embeddings(model: str, input_value: Any) -> dict[str, Any]:
-    from app.common import deterministic_embedding, extract_input_text
+    from app.common import deterministic_embedding
 
     if isinstance(input_value, list):
         inputs = [str(item) for item in input_value]
     else:
         inputs = [str(input_value)]
     data = [
-        {"object": "embedding", "index": index, "embedding": deterministic_embedding(text)}
+        {
+            "object": "embedding",
+            "index": index,
+            "embedding": deterministic_embedding(text),
+        }
         for index, text in enumerate(inputs)
     ]
     token_count = max(1, sum(estimate_tokens(text) for text in inputs))
@@ -125,7 +131,9 @@ def build_embeddings(model: str, input_value: Any) -> dict[str, Any]:
 
 
 def build_moderation(model: str, input_value: str) -> dict[str, Any]:
-    flagged = any(word in input_value.lower() for word in ("hurt", "kill", "attack", "hate"))
+    flagged = any(
+        word in input_value.lower() for word in ("hurt", "kill", "attack", "hate")
+    )
     return {
         "id": generate_id("modr-"),
         "model": model,
@@ -154,7 +162,11 @@ def build_moderation(model: str, input_value: str) -> dict[str, Any]:
 def build_image_generation(model: str, prompt: str) -> dict[str, Any]:
     return {
         "created": unix_timestamp(),
-        "data": [{"b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="}],
+        "data": [
+            {
+                "b64_json": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+            }
+        ],
         "model": model,
         "prompt": prompt,
     }
@@ -180,7 +192,9 @@ async def stream_chat_completion(
             )
         )
     else:
-        response_text = assistant_text(scenario, prompt_text, prefix="Mock stream for: ")
+        response_text = assistant_text(
+            scenario, prompt_text, prefix="Mock stream for: "
+        )
         completion_tokens = estimate_tokens(response_text)
         events.append(
             openai_sse(
@@ -189,7 +203,13 @@ async def stream_chat_completion(
                     "object": "chat.completion.chunk",
                     "created": created,
                     "model": scenario.base_model,
-                    "choices": [{"index": 0, "delta": {"role": "assistant"}, "finish_reason": None}],
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"role": "assistant"},
+                            "finish_reason": None,
+                        }
+                    ],
                 }
             )
         )
@@ -201,7 +221,13 @@ async def stream_chat_completion(
                         "object": "chat.completion.chunk",
                         "created": created,
                         "model": scenario.base_model,
-                        "choices": [{"index": 0, "delta": {"content": part}, "finish_reason": None}],
+                        "choices": [
+                            {
+                                "index": 0,
+                                "delta": {"content": part},
+                                "finish_reason": None,
+                            }
+                        ],
                     }
                 )
             )
@@ -246,7 +272,14 @@ async def stream_legacy_completion(
                     "object": "text_completion",
                     "created": created,
                     "model": scenario.base_model,
-                    "choices": [{"text": part, "index": 0, "logprobs": None, "finish_reason": None}],
+                    "choices": [
+                        {
+                            "text": part,
+                            "index": 0,
+                            "logprobs": None,
+                            "finish_reason": None,
+                        }
+                    ],
                 }
             )
         )
@@ -257,7 +290,9 @@ async def stream_legacy_completion(
                 "object": "text_completion",
                 "created": created,
                 "model": scenario.base_model,
-                "choices": [{"text": "", "index": 0, "logprobs": None, "finish_reason": "stop"}],
+                "choices": [
+                    {"text": "", "index": 0, "logprobs": None, "finish_reason": "stop"}
+                ],
                 "usage": {
                     "prompt_tokens": prompt_tokens,
                     "completion_tokens": completion_tokens,
@@ -403,9 +438,11 @@ async def stream_response(
         yield event
 
 
-def assistant_text(scenario: Scenario, prompt_text: str, *, prefix: str = "Mock response for: ") -> str:
+def assistant_text(
+    scenario: Scenario, prompt_text: str, *, prefix: str = "Mock response for: "
+) -> str:
     if scenario.name == "mock-text":
-        return f"Hello. It's nice to meet you."
+        return "Hello. It's nice to meet you."
     return f"{prefix}{prompt_text or 'empty prompt'}"
 
 
@@ -425,7 +462,9 @@ def _tool_stream_events(
                 "object": "chat.completion.chunk",
                 "created": created,
                 "model": model,
-                "choices": [{"index": 0, "delta": {"role": "assistant"}, "finish_reason": None}],
+                "choices": [
+                    {"index": 0, "delta": {"role": "assistant"}, "finish_reason": None}
+                ],
             }
         )
     )
@@ -455,7 +494,12 @@ def _tool_stream_events(
             }
         )
     )
-    for fragment in ['{"path":', ' "tmp/mock-file.txt",', ' "contents":', ' "mock output"}']:
+    for fragment in [
+        '{"path":',
+        ' "tmp/mock-file.txt",',
+        ' "contents":',
+        ' "mock output"}',
+    ]:
         events.append(
             openai_sse(
                 {
@@ -466,7 +510,11 @@ def _tool_stream_events(
                     "choices": [
                         {
                             "index": 0,
-                            "delta": {"tool_calls": [{"index": 0, "function": {"arguments": fragment}}]},
+                            "delta": {
+                                "tool_calls": [
+                                    {"index": 0, "function": {"arguments": fragment}}
+                                ]
+                            },
                             "finish_reason": None,
                         }
                     ],

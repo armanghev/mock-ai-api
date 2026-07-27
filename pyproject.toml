@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mock-ai-api"
+version = "0.1.0"
+description = "A local mock API for testing OpenAI- and Anthropic-compatible clients."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Arman Ghevondyan" }]
+dependencies = [
+    "fastapi==0.115.14",
+    "httpx>=0.22.0",
+    "python-multipart==0.0.32",
+    "uvicorn>=0.32.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff==0.16.0",
+]
+
+[project.scripts]
+mock-ai-api = "server:main"
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.setuptools]
+py-modules = ["server"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]

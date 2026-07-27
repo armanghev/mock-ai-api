@@ -21,11 +21,14 @@ A local mock API for testing applications that integrate with OpenAI and Anthrop
 ## Quick start
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-python server.py
+python3 -m pip install -e ".[dev]"
+mock-ai-api
 ```
+
+For environments that prefer a requirements file, install the runtime dependencies with
+`python3 -m pip install -r requirements.txt` and launch with `python3 server.py`.
 
 The servers start at:
 
@@ -35,7 +38,8 @@ The servers start at:
 Use `--openai-port`, `--anthropic-port`, or `--reload` to customize the launch:
 
 ```bash
-python server.py --openai-port 9001 --anthropic-port 9002 --reload
+mock-ai-api --openai-port 9001 --anthropic-port 9002 --reload
+# or: python3 server.py --openai-port 9001 --anthropic-port 9002 --reload
 ```
 
 ## Examples
@@ -88,7 +92,7 @@ Set `"stream": true` in supported requests to receive streaming events. Scenario
 Run the test suite with:
 
 ```bash
-pytest -q
+python3 -m pytest -q
 ```
 
 The test clients instantiate each application directly, so the servers do not need to be running when tests execute.
@@ -113,5 +117,4 @@ This project is intended for local development and automated tests. It is not a 
 
 ## License
 
-No license has been selected yet. Add a license before distributing this project for reuse by others.
-
+This project is licensed under the [MIT License](LICENSE).
