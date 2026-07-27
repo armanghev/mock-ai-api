@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from app.common import generate_id, unix_timestamp
-from app.scenarios import Scenario, error_type_for_status
+from app.scenarios import (
+    Scenario,
+    error_type_for_status,
+    find_scenario,
+    scenarios_for_provider,
+)
 
 OPENAI_MODELS: list[dict[str, Any]] = [
     {"id": "gpt-4.1", "object": "model", "created": 1686935002, "owned_by": "openai"},
@@ -50,38 +55,17 @@ OPENAI_MODELS: list[dict[str, Any]] = [
         "owned_by": "openai",
     },
     {"id": "whisper-1", "object": "model", "created": 1686935002, "owned_by": "openai"},
-    # Scenario models for testing
-    {
-        "id": "gpt-4.1:mock-text",
-        "object": "model",
-        "created": 1686935002,
-        "owned_by": "openai",
-    },
-    {
-        "id": "gpt-4.1:mock-tool-stream",
-        "object": "model",
-        "created": 1686935002,
-        "owned_by": "openai",
-    },
-    {
-        "id": "gpt-4.1:mock-bad-tool-json",
-        "object": "model",
-        "created": 1686935002,
-        "owned_by": "openai",
-    },
-    {
-        "id": "gpt-4.1:mock-429",
-        "object": "model",
-        "created": 1686935002,
-        "owned_by": "openai",
-    },
-    {
-        "id": "gpt-4.1:mock-delay",
-        "object": "model",
-        "created": 1686935002,
-        "owned_by": "openai",
-    },
 ]
+
+OPENAI_MODELS.extend(
+    {
+        "id": scenario.example_model,
+        "object": "model",
+        "created": 1686935002,
+        "owned_by": "openai",
+    }
+    for scenario in scenarios_for_provider("openai")
+)
 
 
 def list_models() -> dict[str, Any]:
@@ -109,17 +93,10 @@ def make_error(status_code: int, scenario_name: str) -> dict[str, Any]:
 
 
 def maybe_raise_error(scenario: Scenario) -> dict[str, Any] | None:
-    status_map = {
-        "mock-400": 400,
-        "mock-401": 401,
-        "mock-429": 429,
-        "mock-500": 500,
-        "mock-503": 503,
-    }
-    status_code = status_map.get(scenario.name)
-    if status_code is None:
+    definition = find_scenario(scenario.name, "openai")
+    if definition is None or definition.status_code is None:
         return None
-    return make_error(status_code, scenario.name)
+    return make_error(definition.status_code, scenario.name)
 
 
 class ResponseStore:

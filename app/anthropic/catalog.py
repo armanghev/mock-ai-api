@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from app.common import generate_id, iso_timestamp
-from app.scenarios import Scenario, error_type_for_status
+from app.scenarios import (
+    Scenario,
+    error_type_for_status,
+    find_scenario,
+    scenarios_for_provider,
+)
 
 ANTHROPIC_MODELS: list[dict[str, Any]] = [
     {
@@ -18,31 +23,17 @@ ANTHROPIC_MODELS: list[dict[str, Any]] = [
         "created_at": "2025-05-14T00:00:00Z",
         "type": "model",
     },
-    {
-        "id": "claude-sonnet-4-20250514:mock-anthropic-stream",
-        "display_name": "Claude Sonnet 4 (mock stream)",
-        "created_at": "2025-05-14T00:00:00Z",
-        "type": "model",
-    },
-    {
-        "id": "claude-sonnet-4-20250514:mock-tool-use",
-        "display_name": "Claude Sonnet 4 (mock tool use)",
-        "created_at": "2025-05-14T00:00:00Z",
-        "type": "model",
-    },
-    {
-        "id": "claude-sonnet-4-20250514:mock-tool-stream",
-        "display_name": "Claude Sonnet 4 (mock tool stream)",
-        "created_at": "2025-05-14T00:00:00Z",
-        "type": "model",
-    },
-    {
-        "id": "claude-sonnet-4-20250514:mock-429",
-        "display_name": "Claude Sonnet 4 (mock 429)",
-        "created_at": "2025-05-14T00:00:00Z",
-        "type": "model",
-    },
 ]
+
+ANTHROPIC_MODELS.extend(
+    {
+        "id": scenario.example_model,
+        "display_name": f"Claude Sonnet 4 ({scenario.name})",
+        "created_at": "2025-05-14T00:00:00Z",
+        "type": "model",
+    }
+    for scenario in scenarios_for_provider("anthropic")
+)
 
 
 def list_models() -> dict[str, Any]:
@@ -63,22 +54,15 @@ def get_model(model_id: str) -> dict[str, Any] | None:
 
 
 def maybe_raise_error(scenario: Scenario) -> dict[str, Any] | None:
-    status_map = {
-        "mock-400": 400,
-        "mock-401": 401,
-        "mock-429": 429,
-        "mock-500": 500,
-        "mock-503": 503,
-    }
-    status_code = status_map.get(scenario.name)
-    if status_code is None:
+    definition = find_scenario(scenario.name, "anthropic")
+    if definition is None or definition.status_code is None:
         return None
     return {
-        "status_code": status_code,
+        "status_code": definition.status_code,
         "body": {
             "type": "error",
             "error": {
-                "type": error_type_for_status(status_code),
+                "type": error_type_for_status(definition.status_code),
                 "message": f"Mock scenario {scenario.name} triggered",
             },
         },

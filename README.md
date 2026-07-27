@@ -85,7 +85,44 @@ curl http://127.0.0.1:8012/v1/messages \
   }'
 ```
 
-Set `"stream": true` in supported requests to receive streaming events. Scenario names are defined in `app/scenarios.py` and exercised by the test suite; examples include `mock-text`, `mock-tool-stream`, `mock-delay`, `mock-429`, and `mock-stream-error`.
+Set `"stream": true` in supported requests to receive streaming events.
+
+## Scenarios
+
+Append a scenario name to a model with `:mock-*`. The registry in
+`app/scenarios.py` is the source of truth for scenario behavior, documented
+examples, and advertised scenario models.
+
+| Scenario | Provider | Endpoint | Response mode | Status | Example model | Description |
+| --- | --- | --- | --- | --- | --- | --- |
+| `mock-text` | openai | `/v1/chat/completions` | text | — | `gpt-4.1:mock-text` | Returns a fixed greeting. |
+| `mock-tool-call` | openai | `/v1/chat/completions` | tool call | — | `gpt-4.1:mock-tool-call` | Returns one function tool call. |
+| `mock-tool-stream` | openai | `/v1/chat/completions` | stream | — | `gpt-4.1:mock-tool-stream` | Streams function tool-call deltas. |
+| `mock-bad-tool-json` | openai | `/v1/chat/completions` | tool call | — | `gpt-4.1:mock-bad-tool-json` | Returns intentionally malformed tool arguments. |
+| `mock-delay` | openai | `/v1/chat/completions` | delay | — | `gpt-4.1:mock-delay` | Adds deterministic streaming delay. |
+| `mock-400` | openai | `/v1/chat/completions` | error | 400 | `gpt-4.1:mock-400` | Returns an invalid-request error. |
+| `mock-401` | openai | `/v1/chat/completions` | error | 401 | `gpt-4.1:mock-401` | Returns an authentication error. |
+| `mock-429` | openai | `/v1/chat/completions` | error | 429 | `gpt-4.1:mock-429` | Returns a rate-limit error. |
+| `mock-500` | openai | `/v1/chat/completions` | error | 500 | `gpt-4.1:mock-500` | Returns an API error. |
+| `mock-503` | openai | `/v1/chat/completions` | error | 503 | `gpt-4.1:mock-503` | Returns a service-unavailable error. |
+| `mock-text` | anthropic | `/v1/messages` | text | — | `claude-sonnet-4-20250514:mock-text` | Returns a fixed greeting. |
+| `mock-anthropic-stream` | anthropic | `/v1/messages` | stream | — | `claude-sonnet-4-20250514:mock-anthropic-stream` | Streams text in Anthropic event order. |
+| `mock-tool-use` | anthropic | `/v1/messages` | tool call | — | `claude-sonnet-4-20250514:mock-tool-use` | Returns one tool-use content block. |
+| `mock-tool-stream` | anthropic | `/v1/messages` | stream | — | `claude-sonnet-4-20250514:mock-tool-stream` | Streams tool-use JSON deltas. |
+| `mock-delay` | anthropic | `/v1/messages` | delay | — | `claude-sonnet-4-20250514:mock-delay` | Adds deterministic streaming delay. |
+| `mock-stream-error` | anthropic | `/v1/messages` | error | — | `claude-sonnet-4-20250514:mock-stream-error` | Emits an API error event after streaming begins. |
+| `mock-400` | anthropic | `/v1/messages` | error | 400 | `claude-sonnet-4-20250514:mock-400` | Returns an invalid-request error. |
+| `mock-401` | anthropic | `/v1/messages` | error | 401 | `claude-sonnet-4-20250514:mock-401` | Returns an authentication error. |
+| `mock-429` | anthropic | `/v1/messages` | error | 429 | `claude-sonnet-4-20250514:mock-429` | Returns a rate-limit error. |
+| `mock-500` | anthropic | `/v1/messages` | error | 500 | `claude-sonnet-4-20250514:mock-500` | Returns an API error. |
+| `mock-503` | anthropic | `/v1/messages` | error | 503 | `claude-sonnet-4-20250514:mock-503` | Returns a service-unavailable error. |
+
+### Extending scenarios
+
+1. Add the scenario metadata to `SCENARIOS` in `app/scenarios.py`, including its provider, endpoint, response mode, optional error status, and example model.
+2. Implement the provider-specific behavior in the relevant builder or streaming path.
+3. The provider model catalog is generated from the registry; do not add a duplicate catalog entry by hand.
+4. Add direct API tests, SDK coverage where the endpoint is SDK-supported, and update this table to describe the behavior.
 
 ## Development
 
@@ -109,7 +146,7 @@ app/
   anthropic_app.py    Anthropic-compatible routes
   openai/             OpenAI response builders and catalog
   anthropic/          Anthropic response builders and catalog
-  scenarios.py        Mock scenario parsing
+  scenarios.py        Scenario registry and model-suffix parsing
   schemas.py          Request models
 server.py             Starts both mock servers
 tests/                API behavior tests
