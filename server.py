@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import signal
 import subprocess
 import sys
 
@@ -27,6 +29,18 @@ def server_command(app: str, port: int, reload: bool) -> list[str]:
     return command
 
 
+def stop_process(process: subprocess.Popen[object]) -> None:
+    if process.poll() is not None:
+        return
+    try:
+        if os.name == "posix":
+            os.killpg(process.pid, signal.SIGTERM)
+        else:
+            process.terminate()
+    except ProcessLookupError:
+        pass
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run OpenAI and Anthropic mock API servers"
@@ -41,10 +55,12 @@ def main() -> None:
 
     processes = [
         subprocess.Popen(
-            server_command("app.openai_app:app", args.openai_port, args.reload)
+            server_command("app.openai_app:app", args.openai_port, args.reload),
+            start_new_session=True,
         ),
         subprocess.Popen(
-            server_command("app.anthropic_app:app", args.anthropic_port, args.reload)
+            server_command("app.anthropic_app:app", args.anthropic_port, args.reload),
+            start_new_session=True,
         ),
     ]
     try:
@@ -54,8 +70,7 @@ def main() -> None:
         print("\nStopping mock API servers...")
     finally:
         for process in processes:
-            if process.poll() is None:
-                process.terminate()
+            stop_process(process)
         for process in processes:
             process.wait()
 
