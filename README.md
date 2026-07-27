@@ -20,15 +20,37 @@ A local mock API for testing applications that integrate with OpenAI and Anthrop
 
 ## Quick start
 
+Install the command-line server from [PyPI](https://pypi.org/project/mock-ai-api/) with
+[pipx](https://pipx.pypa.io/):
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install -e ".[dev]"
+pipx install mock-ai-api
 mock-ai-api
 ```
 
-For environments that prefer a requirements file, install the runtime dependencies with
-`python3 -m pip install -r requirements.txt` and launch with `python3 server.py`.
+If you prefer a virtual environment, install it with pip instead:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install mock-ai-api
+mock-ai-api
+```
+
+### From source
+
+For local development or contributing, clone the repository and install the editable
+development dependencies:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+mock-ai-api
+```
+
+The `requirements.txt` file remains available for environments that prefer it:
+`python -m pip install -r requirements.txt` followed by `python server.py`.
 
 The servers start at:
 
