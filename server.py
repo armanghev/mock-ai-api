@@ -45,19 +45,26 @@ def main() -> None:
         target=run_openai_server,
         args=(args.openai_port, args.reload),
         name="openai-mock-api",
-        daemon=True,
     )
     anthropic_process = multiprocessing.Process(
         target=run_anthropic_server,
         args=(args.anthropic_port, args.reload),
         name="anthropic-mock-api",
-        daemon=True,
     )
 
     openai_process.start()
     anthropic_process.start()
-    openai_process.join()
-    anthropic_process.join()
+    try:
+        openai_process.join()
+        anthropic_process.join()
+    except KeyboardInterrupt:
+        print("\nStopping mock API servers...")
+        for process in (openai_process, anthropic_process):
+            if process.is_alive():
+                process.terminate()
+    finally:
+        for process in (openai_process, anthropic_process):
+            process.join()
 
 
 if __name__ == "__main__":
