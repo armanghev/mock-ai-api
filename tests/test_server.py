@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import sys
 
+import pytest
+
 import server
 
 
@@ -28,12 +30,12 @@ class FakeProcess:
         return None if not self.terminated else 0
 
 
-def test_reload_uses_top_level_uvicorn_processes_and_interrupt_terminates_them(
+def test_launcher_starts_non_reloading_servers_and_interrupt_terminates_them(
     monkeypatch,
 ) -> None:
     FakeProcess.instances = []
     monkeypatch.setattr(server.subprocess, "Popen", FakeProcess)
-    monkeypatch.setattr(sys, "argv", ["mock-ai-api", "--reload"])
+    monkeypatch.setattr(sys, "argv", ["mock-ai-api"])
     terminated_groups: list[tuple[int, int]] = []
     monkeypatch.setattr(
         server.os,
@@ -48,7 +50,7 @@ def test_reload_uses_top_level_uvicorn_processes_and_interrupt_terminates_them(
         process.command[:3] == [sys.executable, "-m", "uvicorn"]
         for process in FakeProcess.instances
     )
-    assert all("--reload" in process.command for process in FakeProcess.instances)
+    assert all("--reload" not in process.command for process in FakeProcess.instances)
     assert all(
         process.kwargs == {"start_new_session": True}
         for process in FakeProcess.instances
@@ -57,3 +59,17 @@ def test_reload_uses_top_level_uvicorn_processes_and_interrupt_terminates_them(
         (100, server.signal.SIGKILL),
         (101, server.signal.SIGKILL),
     ]
+
+
+def test_launcher_rejects_reload_option(monkeypatch) -> None:
+    monkeypatch.setattr(sys, "argv", ["mock-ai-api", "--reload"])
+    monkeypatch.setattr(
+        server.subprocess,
+        "Popen",
+        lambda *_args, **_kwargs: pytest.fail("--reload must be rejected"),
+    )
+
+    with pytest.raises(SystemExit) as error:
+        server.main()
+
+    assert error.value.code == 2

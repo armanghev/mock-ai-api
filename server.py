@@ -11,8 +11,8 @@ from app.anthropic_app import DEFAULT_PORT as ANTHROPIC_PORT
 from app.openai_app import DEFAULT_PORT as OPENAI_PORT
 
 
-def server_command(app: str, port: int, reload: bool) -> list[str]:
-    command = [
+def server_command(app: str, port: int) -> list[str]:
+    return [
         sys.executable,
         "-m",
         "uvicorn",
@@ -24,9 +24,6 @@ def server_command(app: str, port: int, reload: bool) -> list[str]:
         "--log-level",
         "info",
     ]
-    if reload:
-        command.append("--reload")
-    return command
 
 
 def stop_process(process: subprocess.Popen[object]) -> None:
@@ -47,7 +44,6 @@ def main() -> None:
     )
     parser.add_argument("--openai-port", type=int, default=OPENAI_PORT)
     parser.add_argument("--anthropic-port", type=int, default=ANTHROPIC_PORT)
-    parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()
 
     print(f"OpenAI mock API:    http://127.0.0.1:{args.openai_port}")
@@ -55,11 +51,11 @@ def main() -> None:
 
     processes = [
         subprocess.Popen(
-            server_command("app.openai_app:app", args.openai_port, args.reload),
+            server_command("app.openai_app:app", args.openai_port),
             start_new_session=True,
         ),
         subprocess.Popen(
-            server_command("app.anthropic_app:app", args.anthropic_port, args.reload),
+            server_command("app.anthropic_app:app", args.anthropic_port),
             start_new_session=True,
         ),
     ]

@@ -35,11 +35,11 @@ The servers start at:
 - OpenAI: <http://127.0.0.1:8011>
 - Anthropic: <http://127.0.0.1:8012>
 
-Use `--openai-port`, `--anthropic-port`, or `--reload` to customize the launch:
+Use `--openai-port` or `--anthropic-port` to customize the launch:
 
 ```bash
-mock-ai-api --openai-port 9001 --anthropic-port 9002 --reload
-# or: python3 server.py --openai-port 9001 --anthropic-port 9002 --reload
+mock-ai-api --openai-port 9001 --anthropic-port 9002
+# or: python3 server.py --openai-port 9001 --anthropic-port 9002
 ```
 
 ## Examples
